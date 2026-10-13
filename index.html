@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Prépa ski de rando · Décembre</title>
+<title>Prépa ski de rando</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -64,6 +64,11 @@ h1{font-size:2.4rem;font-weight:700;letter-spacing:-.01em}
 .day.sel{outline:2.5px solid var(--signal);outline-offset:1px}
 .day:focus-visible{outline:2.5px solid var(--glacier);outline-offset:2px}
 .empty{visibility:hidden}
+.mnav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px}
+.mnav h3{font-size:1.5rem;font-weight:600}
+.mnav button{appearance:none;width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:1.6rem;line-height:1;cursor:pointer}
+.mnav button:disabled{opacity:.3;cursor:default}
+.mnav button:focus-visible{outline:2.5px solid var(--glacier);outline-offset:2px}
 
 .panel{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px 8px}
 .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -130,7 +135,7 @@ button.btn:focus-visible{outline:2.5px solid var(--glacier);outline-offset:2px}
 <div class="wrap">
   <header>
     <h1>Prépa ski de rando</h1>
-    <p class="sub">Décembre 2026 · 2 séances par semaine à Basic-Fit Albertville</p>
+    <p class="sub">Du 13 octobre au 31 décembre · mardi et jeudi à Basic-Fit Albertville</p>
   </header>
 
   <div class="ridge" aria-hidden="true">
@@ -144,16 +149,17 @@ button.btn:focus-visible{outline:2.5px solid var(--glacier);outline-offset:2px}
   </div>
   <div class="ridge-meta">
     <strong id="pct">0 %</strong>
-    <span id="count">0 / 9 séances complètes</span>
+    <span id="count">0 / 24 séances complètes</span>
   </div>
 
   <p class="phase" id="phase"></p>
-  <div class="cal" id="cal" aria-label="Calendrier de décembre"></div>
+  <div class="mnav"><button type="button" id="prev" aria-label="Mois précédent">‹</button><h3 id="mlabel"></h3><button type="button" id="next" aria-label="Mois suivant">›</button></div>
+  <div class="cal" id="cal" aria-label="Calendrier"></div>
   <section class="panel" id="panel" aria-live="polite"></section>
 
   <div class="notes">
     <h3>Repères</h3>
-    <p><b>Mardi</b> : force jambes + endurance sur tapis. <b>Samedi</b> : stabilité + intervalles au StairMaster. Le dimanche, une sortie dehors facultative.</p>
+    <p><b>Mardi</b> : force jambes + endurance sur tapis. <b>Jeudi</b> : stabilité + intervalles au StairMaster. Le dimanche, une sortie dehors facultative.</p>
     <p><b>Zone 2</b> : tu peux parler en phrases complètes. C'est l'allure de la montée en peaux.</p>
     <p><b>Charges</b> : garde 2 répétitions en réserve sur chaque série. Monte la charge quand la dernière série devient facile.</p>
     <p><b>Repos entre séries</b> : 60 à 90 s pour la force, 30 s pour le gainage.</p>
@@ -327,14 +333,20 @@ const EX={
 };
 
 /* ---------- Programme ---------- */
-function weekOf(d){ if(d<=6) return 0; if(d<=13) return 1; if(d<=20) return 2; if(d<=27) return 3; return 4; }
-const PHASES=[
-  "Semaine 1 (1–6) · Base : on apprend les mouvements, charges modérées.",
-  "Semaine 2 (7–13) · Construction : plus de volume.",
-  "Semaine 3 (14–20) · Pic : la semaine la plus dure.",
-  "Semaine 4 (21–27) · Allègement de Noël : le corps assimile.",
-  "Semaine 5 (28–31) · Test : prêt pour janvier."
-];
+const START=new Date(2026,9,13), END=new Date(2026,11,31), WEEK0=new Date(2026,9,12);
+const MONTHS=[[2026,9],[2026,10],[2026,11]];
+const LEVEL=[0,0,1,3,1,2,2,3,2,2,3,4];
+const LEVEL_TXT=["Base : on apprend les mouvements, charges modérées.","Construction : plus de volume.","Pic : les semaines les plus dures.","Allègement : le corps assimile.","Test : prêt pour la saison."];
+const key=dt=>dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+const fromKey=k=>{const p=k.split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);};
+const weekIdx=dt=>Math.floor((new Date(dt.getFullYear(),dt.getMonth(),dt.getDate())-WEEK0)/(7*864e5));
+const levelOf=dt=>LEVEL[Math.max(0,Math.min(11,weekIdx(dt)))];
+const fmt=dt=>dt.getDate()+" "+MONTHS_FR[dt.getMonth()];
+function phaseText(dt){
+  const w=Math.max(0,Math.min(11,weekIdx(dt)));
+  const mon=new Date(2026,9,12+7*w), sun=new Date(2026,9,18+7*w);
+  return "Semaine "+(w+1)+" sur 12 (du "+fmt(w===0?START:mon)+" au "+fmt(sun>END?END:sun)+") · "+LEVEL_TXT[LEVEL[w]];
+}
 const P=(w,a)=>a[w];
 
 function seanceA(w){ // mardi
@@ -351,7 +363,7 @@ function seanceA(w){ // mardi
       ["tapis",P(w,["20 min","25 min","30 min","15 min","25 min"])]
     ]};
 }
-function seanceB(w){ // samedi
+function seanceB(w){ // jeudi
   return {kind:"gym",title:"Stabilité + intervalles",short:"Stab.",badge:P(w,["60 min","65 min","70 min","45 min","65 min"]),
     goal:"Genoux et chevilles solides pour la neige variable, puis des intervalles pour les passages raides.",
     ex:[
@@ -370,109 +382,118 @@ function sortie(w){
     goal:"Facultatif : le vrai terrain, si tu as le temps.",
     ex:[["sortie",P(w,["+500 m de dénivelé, sac 6 kg","+700 m, sac 7 kg","+900 m, sac 8 kg","+400 m tranquille","+800 m, sac 8 kg"])]]};
 }
-function sessionFor(d){
-  const dow=new Date(YEAR,MONTH,d).getDay(), w=weekOf(d);
-  if(dow===2) return seanceA(w);
-  if(dow===6) return seanceB(w);
-  if(dow===0) return sortie(w);
-  return {kind:"off",title:"Repos",short:"",goal:"Pas de séance prévue. La récupération fait partie de l'entraînement."};
+const OFF={kind:"off",title:"Repos",short:"",goal:"Pas de séance prévue. La récupération fait partie de l'entraînement."};
+const SESS={};
+function sess(k){
+  if(SESS[k]) return SESS[k];
+  const dt=fromKey(k);
+  let s=OFF;
+  if(dt>=START&&dt<=END){
+    const w=levelOf(dt), dow=dt.getDay();
+    if(dow===2) s=seanceA(w); else if(dow===4) s=seanceB(w); else if(dow===0) s=sortie(w);
+    if((k==="2026-12-24"||k==="2026-12-31")&&s.kind==="gym") s={...s,goal:s.goal+" Vérifie les horaires du club ce jour-là."};
+  }
+  return SESS[k]=s;
 }
-const SESS={}; for(let d=1; d<=DAYS; d++) SESS[d]=sessionFor(d);
+const ALL_GYM=[]; for(let dt=new Date(START); dt<=END; dt.setDate(dt.getDate()+1)){ const k=key(dt); if(sess(k).kind==="gym") ALL_GYM.push(k); }
+
 const SHEET_CACHE={};
-function sheet(key){
-  if(SHEET_CACHE[key]) return SHEET_CACHE[key];
-  const e=EX[key];
-  const h=svg(DRAW[key],"Dessin : "+e.name)
+function sheet(k){
+  if(SHEET_CACHE[k]) return SHEET_CACHE[k];
+  const e=EX[k];
+  return SHEET_CACHE[k]=svg(DRAW[k],"Dessin : "+e.name)
     +'<h4>Réglage</h4><p>'+e.set+'</p>'
-    +'<h4>Mouvement</h4><ol>'+e.steps.map(s=>'<li>'+s+'</li>').join("")+'</ol>'
+    +'<h4>Mouvement</h4><ol>'+e.steps.map(x=>'<li>'+x+'</li>').join("")+'</ol>'
     +'<h4>Point clé</h4><p class="warn">'+e.warn+'</p>';
-  return SHEET_CACHE[key]=h;
 }
 
 /* ---------- État ---------- */
-const LS_KEY="prepa-rando-dec2026-v2";
+const LS_KEY="prepa-rando-2026-v3";
 let state={checks:{}};
 try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&p.checks) state=p; } }catch(e){}
-const isChecked=(d,i)=>!!(state.checks[d]&&state.checks[d][i]);
-function dayStatus(d){
-  const s=SESS[d]; if(s.kind==="off") return "off";
-  const n=s.ex.length; let c=0; for(let i=0;i<n;i++) if(isChecked(d,i)) c++;
+const isChecked=(k,i)=>!!(state.checks[k]&&state.checks[k][i]);
+function dayStatus(k){
+  const s=sess(k); if(s.kind==="off") return "off";
+  const n=s.ex.length; let c=0; for(let i=0;i<n;i++) if(isChecked(k,i)) c++;
   return c===0?"none":(c===n?"done":"partial");
 }
-const now=new Date();
-const todayD=(now.getFullYear()===YEAR&&now.getMonth()===MONTH)?now.getDate():null;
-let selected=todayD||1;
-if(SESS[selected].kind==="off"){ for(let d=selected; d<=DAYS; d++){ if(SESS[d].kind==="gym"){ selected=d; break; } } }
+const now=new Date(), todayK=key(now);
+let selected=(now>=START&&fromKey(todayK)<=END)?todayK:key(START);
+if(sess(selected).kind==="off"){ const nx=ALL_GYM.find(k=>k>=selected); if(nx) selected=nx; }
+let view=MONTHS.findIndex(m=>m[1]===fromKey(selected).getMonth()); if(view<0) view=0;
 const openSheets=new Set();
 
 /* ---------- Rendu ---------- */
 const cal=document.getElementById("cal");
 function renderCal(){
+  const [Y,M]=MONTHS[view];
+  document.getElementById("mlabel").textContent=MONTHS_FR[M].charAt(0).toUpperCase()+MONTHS_FR[M].slice(1)+" "+Y;
+  document.getElementById("prev").disabled=view===0;
+  document.getElementById("next").disabled=view===MONTHS.length-1;
   cal.innerHTML="";
   ["L","M","M","J","V","S","D"].forEach(l=>{const e=document.createElement("div");e.className="dow";e.textContent=l;e.setAttribute("aria-hidden","true");cal.appendChild(e);});
-  const offset=(new Date(YEAR,MONTH,1).getDay()+6)%7;
+  const offset=(new Date(Y,M,1).getDay()+6)%7, nd=new Date(Y,M+1,0).getDate();
   for(let i=0;i<offset;i++){const e=document.createElement("div");e.className="empty";cal.appendChild(e);}
-  for(let d=1; d<=DAYS; d++){
-    const s=SESS[d], st=dayStatus(d);
+  for(let d=1; d<=nd; d++){
+    const k=key(new Date(Y,M,d)), s=sess(k), st=dayStatus(k);
     const b=document.createElement("button"); b.type="button";
-    b.className="day "+(s.kind)+(st==="done"?" done":"")+(st==="partial"?" partial":"")+(d===todayD?" today":"")+(d===selected?" sel":"");
+    b.className="day "+s.kind+(st==="done"?" done":"")+(st==="partial"?" partial":"")+(k===todayK?" today":"")+(k===selected?" sel":"");
     b.innerHTML='<span class="n">'+d+'</span><span class="t">'+s.short+'</span>';
-    b.setAttribute("aria-label",d+" décembre, "+s.title+(st==="done"?", terminé":st==="partial"?", en cours":""));
-    b.addEventListener("click",()=>{ selected=d; openSheets.clear(); render();
+    b.setAttribute("aria-label",d+" "+MONTHS_FR[M]+", "+s.title+(st==="done"?", terminé":st==="partial"?", en cours":""));
+    b.addEventListener("click",()=>{ selected=k; openSheets.clear(); render();
       document.getElementById("panel").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"}); });
     cal.appendChild(b);
   }
 }
+document.getElementById("prev").addEventListener("click",()=>{ if(view>0){view--;renderCal();} });
+document.getElementById("next").addEventListener("click",()=>{ if(view<MONTHS.length-1){view++;renderCal();} });
+
 function renderPanel(){
-  const d=selected, s=SESS[d], date=new Date(YEAR,MONTH,d);
+  const k=selected, s=sess(k), date=fromKey(k);
   const p=document.getElementById("panel");
-  let h='<div class="panel-head"><div><div class="date">'+DOW_FR[date.getDay()]+' '+d+' '+MONTHS_FR[MONTH]+'</div><h2>'+s.title+'</h2></div>'+(s.badge?'<span class="badge">'+s.badge+'</span>':'')+'</div>';
+  let h='<div class="panel-head"><div><div class="date">'+DOW_FR[date.getDay()]+' '+fmt(date)+'</div><h2>'+s.title+'</h2></div>'+(s.badge?'<span class="badge">'+s.badge+'</span>':'')+'</div>';
   h+='<p class="goal">'+s.goal+'</p>';
-  if(s.kind==="off"){ h+='<p class="rest-msg">Prochaine séance : '+nextLabel(d)+'.</p>'; }
+  if(s.kind==="off"){ h+='<p class="rest-msg">Prochaine séance : '+nextLabel(k)+'.</p>'; }
   else{
     h+='<ul class="ex">';
     s.ex.forEach((e,i)=>{
-      const x=EX[e[0]], c=isChecked(d,i), key=d+"-"+i;
+      const x=EX[e[0]], c=isChecked(k,i), sk=k+"-"+i;
       h+='<li class="'+(c?"checked":"")+'"><label class="row"><input type="checkbox" data-i="'+i+'"'+(c?" checked":"")+' aria-label="'+x.name+' fait">'
         +'<span><span class="ex-name"><span class="idx">'+(i+1)+'.</span>'+x.name+'</span><span class="ex-dose">'+e[1]+'</span><span class="ex-machine">'+x.machine+'</span></span></label>'
-        +'<details class="how" data-k="'+key+'" data-ex="'+e[0]+'"'+(openSheets.has(key)?" open":"")+'><summary>Comment faire</summary><div class="sheet">'+(openSheets.has(key)?sheet(e[0]):"")+'</div></details></li>';
+        +'<details class="how" data-k="'+sk+'" data-ex="'+e[0]+'"'+(openSheets.has(sk)?" open":"")+'><summary>Comment faire</summary><div class="sheet">'+(openSheets.has(sk)?sheet(e[0]):"")+'</div></details></li>';
     });
     h+='</ul><div class="actions"><button class="btn primary" type="button" id="all">Tout cocher</button><button class="btn" type="button" id="none">Décocher</button></div>';
   }
   p.innerHTML=h;
-  p.querySelectorAll(".row input").forEach(inp=>inp.addEventListener("change",()=>setCheck(d,+inp.dataset.i,inp.checked)));
+  p.querySelectorAll(".row input").forEach(inp=>inp.addEventListener("change",()=>setCheck(k,+inp.dataset.i,inp.checked)));
   p.querySelectorAll("details.how").forEach(dt=>dt.addEventListener("toggle",()=>{
-    const k=dt.dataset.k;
-    if(dt.open){ openSheets.add(k); const sh=dt.querySelector(".sheet"); if(!sh.innerHTML) sh.innerHTML=sheet(dt.dataset.ex); }
-    else openSheets.delete(k);
+    const sk=dt.dataset.k;
+    if(dt.open){ openSheets.add(sk); const sh=dt.querySelector(".sheet"); if(!sh.innerHTML) sh.innerHTML=sheet(dt.dataset.ex); }
+    else openSheets.delete(sk);
   }));
   const all=document.getElementById("all"), none=document.getElementById("none");
-  if(all) all.addEventListener("click",()=>{ s.ex.forEach((_,i)=>setCheck(d,i,true,true)); commit(); });
-  if(none) none.addEventListener("click",()=>{ s.ex.forEach((_,i)=>setCheck(d,i,false,true)); commit(); });
+  if(all) all.addEventListener("click",()=>{ s.ex.forEach((_,i)=>setCheck(k,i,true,true)); commit(); });
+  if(none) none.addEventListener("click",()=>{ s.ex.forEach((_,i)=>setCheck(k,i,false,true)); commit(); });
 }
-function nextLabel(d){
-  for(let k=d+1;k<=DAYS;k++) if(SESS[k].kind==="gym") return DOW_FR[new Date(YEAR,MONTH,k).getDay()].toLowerCase()+" "+k+" ("+SESS[k].title+")";
-  return "en janvier";
+function nextLabel(k){
+  const nx=ALL_GYM.find(g=>g>k); if(!nx) return "la saison commence !";
+  const dt=fromKey(nx); return DOW_FR[dt.getDay()].toLowerCase()+" "+fmt(dt)+" ("+sess(nx).title+")";
 }
 function renderProgress(){
-  let total=0, done=0, exT=0, exD=0;
-  for(let d=1; d<=DAYS; d++){
-    const s=SESS[d]; if(s.kind!=="gym") continue;
-    total++; if(dayStatus(d)==="done") done++;
-    exT+=s.ex.length; s.ex.forEach((_,i)=>{ if(isChecked(d,i)) exD++; });
-  }
+  let done=0, exT=0, exD=0;
+  ALL_GYM.forEach(k=>{ const s=sess(k); if(dayStatus(k)==="done") done++; exT+=s.ex.length; s.ex.forEach((_,i)=>{ if(isChecked(k,i)) exD++; }); });
   const pct=exT?Math.round(exD/exT*100):0;
   document.getElementById("fill").setAttribute("width",String(320*pct/100));
   document.getElementById("pct").textContent=pct+" %";
-  document.getElementById("count").textContent=done+" / "+total+" séances complètes";
-  document.getElementById("phase").textContent=PHASES[weekOf(selected)];
+  document.getElementById("count").textContent=done+" / "+ALL_GYM.length+" séances complètes";
+  document.getElementById("phase").textContent=phaseText(fromKey(selected));
 }
-function render(){ renderCal(); renderPanel(); renderProgress(); }
+function render(){ const sm=fromKey(selected).getMonth(); const vi=MONTHS.findIndex(m=>m[1]===sm); if(vi>=0) view=vi; renderCal(); renderPanel(); renderProgress(); }
 
-function setCheck(d,i,val,batch){
-  if(!state.checks[d]) state.checks[d]={};
-  if(val) state.checks[d][i]=true; else delete state.checks[d][i];
-  if(!Object.keys(state.checks[d]).length) delete state.checks[d];
+function setCheck(k,i,val,batch){
+  if(!state.checks[k]) state.checks[k]={};
+  if(val) state.checks[k][i]=true; else delete state.checks[k][i];
+  if(!Object.keys(state.checks[k]).length) delete state.checks[k];
   if(!batch) commit();
 }
 let dbDoc=null, saveTimer=null;
@@ -490,7 +511,7 @@ function commit(){
   }
 }
 document.getElementById("reset").addEventListener("click",()=>{
-  if(confirm("Décocher toutes les séances du mois ?")){ state={checks:{}}; commit(); }
+  if(confirm("Décocher toutes les séances ?")){ state={checks:{}}; commit(); }
 });
 render();
 
@@ -501,7 +522,7 @@ render();
     const [db,user]=await Promise.all([window.claude.use("db"),window.claude.use("user")]);
     if(!db||!user) return;
     const id=await user.id(); if(!id) return;
-    dbDoc=db.doc("data/users/"+id+"/progress2");
+    dbDoc=db.doc("data/users/"+id+"/progress3");
     const snap=await dbDoc.get();
     if(snap.exists){
       const data=snap.data();
