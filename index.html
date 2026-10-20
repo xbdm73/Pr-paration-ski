@@ -167,7 +167,7 @@ button.btn:focus-visible{outline:2.5px solid var(--glacier);outline-offset:2px}
 
   <div class="notes">
     <h3>Repères</h3>
-    <p><b>Mardi</b> : force jambes + endurance, en alternance sur tapis incliné et sur escalier mécanique. <b>Jeudi</b> : stabilité + intervalles au StairMaster. Le dimanche, une sortie dehors facultative.</p>
+    <p><b>Mardi</b> : force jambes aux machines (presse, leg extension, leg curl, Smith) + endurance, en alternance sur tapis incliné et escalier mécanique. <b>Jeudi</b> : Smith, abducteurs, adducteurs, poulie + intervalles à l’escalier mécanique. Le dimanche, une sortie dehors facultative.</p>
     <p><b>Zone 2</b> : tu peux parler en phrases complètes. C'est l'allure de la montée en peaux.</p>
     <p><b>Charges</b> : garde 2 répétitions en réserve sur chaque série. Monte la charge quand la dernière série devient facile.</p>
     <p><b>Charges conseillées</b> : ce sont des points de départ pour un adulte actif qui reprend la musculation. Si tu fais toutes les répétitions avec plus de 2 en réserve, prends la charge au-dessus ; si la dernière série est un combat, descends d’un cran.</p>
@@ -196,8 +196,8 @@ const PL=(pts,c)=>'<polyline class="'+c+'" points="'+pts.map(p=>p.join(",")).joi
 function body(j){
   // j: head, sh, hip, legs:[[knee,foot] far, [knee,foot] near], arms: [[elbow,hand] far, near]
   let s="";
-  if(j.arms&&j.arms[0]) s+=PL([j.sh,j.arms[0][0],j.arms[0][1]],"bf");
-  if(j.legs&&j.legs[0]) s+=PL([j.hip,j.legs[0][0],j.legs[0][1]],"bf");
+  if(j.arms&&j.arms[0]) s+=PL([j.sh,j.arms[0][0],j.arms[0][1]],j.front?"b":"bf");
+  if(j.legs&&j.legs[0]) s+=PL([j.hip,j.legs[0][0],j.legs[0][1]],j.front?"b":"bf");
   s+=L(j.sh,j.hip,"b");
   if(j.legs&&j.legs[1]) s+=PL([j.hip,j.legs[1][0],j.legs[1][1]],"b");
   if(j.arms&&j.arms[1]) s+=PL([j.sh,j.arms[1][0],j.arms[1][1]],"b");
@@ -271,6 +271,39 @@ const DRAW={
 };
 
 DRAW.stairz2=DRAW.stair;
+const SEAT='<line class="eql" style="stroke-width:7" x1="58" y1="92" x2="104" y2="92"/><line class="eql" style="stroke-width:7" x1="58" y1="92" x2="54" y2="44"/><line class="eql" style="stroke-width:3" x1="80" y1="96" x2="80" y2="121"/>';
+const RAIL=x=>'<line class="eql" style="stroke-width:3;opacity:.55" x1="'+x+'" y1="8" x2="'+x+'" y2="121"/>';
+DRAW.legext=id=>G+SEAT
+  +'<path class="ard" d="M108 86 L112 118"/>'
+  +body({head:[66,36],sh:[66,51],hip:[70,86],legs:[[[106,84],[146,80]],[[108,86],[148,82]]],arms:[[[70,72],[80,90]],[[72,71],[82,89]]]})
+  +'<circle class="eq" cx="150" cy="88" r="6"/>'+arrow("M162 112 L164 90",id);
+DRAW.legcurl=id=>G+SEAT+'<line class="eql" style="stroke-width:6" x1="84" y1="76" x2="112" y2="76"/>'
+  +'<path class="ard" d="M108 86 L148 82"/>'
+  +body({head:[66,36],sh:[66,51],hip:[70,86],legs:[[[106,84],[98,114]],[[108,86],[100,116]]],arms:[[[70,72],[80,90]],[[72,71],[82,89]]]})
+  +'<circle class="eq" cx="106" cy="114" r="6"/>'+arrow("M150 94 L120 116",id);
+DRAW.fentesSmith=id=>G+RAIL(124)
+  +body({head:[112,42],sh:[112,57],hip:[112,90],legs:[[[90,116],[66,119]],[[140,93],[140,120]]],arms:[[[100,66],[110,53]],[[103,67],[114,53]]]})
+  +'<circle class="eq" cx="112" cy="53" r="6"/>'+arrow("M168 62 L168 100",id);
+DRAW.squatSmith=id=>G+RAIL(104)
+  +body({head:[110,46],sh:[104,61],hip:[90,92],legs:[[[122,92],[112,120]],[[126,94],[116,120]]],arms:[[[94,72],[102,58]],[[97,73],[106,58]]]})
+  +'<circle class="eq" cx="104" cy="58" r="6"/>'+arrow("M160 58 L160 100",id);
+DRAW.hipthrustSmith=id=>RAIL(114)+DRAW.hipthrust(id);
+DRAW.mollpresse=id=>G+'<line class="eql" style="stroke-width:4" x1="86" y1="121" x2="182" y2="40"/><line class="eql" style="stroke-width:9" x1="36" y1="110" x2="62" y2="70"/><line class="eql" style="stroke-width:7" x1="62" y1="112" x2="92" y2="112"/><line class="eql" style="stroke-width:7" x1="134" y1="42" x2="156" y2="68"/>'
+  +body({head:[46,69],sh:[55,82],hip:[78,106],legs:[[[107,80],[138,54]],[[109,82],[141,57]]],arms:[[[68,98],[82,108]],[[70,96],[84,106]]]})
+  +'<text class="lbl" x="84" y="24">pointes de pieds</text>'+arrow("M162 96 L178 82",id);
+DRAW.lombaires=id=>G+'<line class="eql" style="stroke-width:4" x1="148" y1="121" x2="104" y2="84"/><line class="eql" style="stroke-width:7" x1="90" y1="92" x2="112" y2="74"/><line class="eql" style="stroke-width:6" x1="146" y1="108" x2="160" y2="120"/>'
+  +'<path class="ard" d="M100 80 L90 114"/>'
+  +body({head:[60,44],sh:[70,54],hip:[100,80],legs:[[[124,99],[150,116]],[[125,100],[151,117]]],arms:[[[82,62],[76,52]],[[84,64],[78,54]]]})
+  +arrow("M60 100 L58 70",id);
+DRAW.abd=id=>G+'<rect class="eq" x="66" y="82" width="68" height="9" rx="2"/><rect class="eq" x="56" y="74" width="8" height="24" rx="2"/><rect class="eq" x="136" y="74" width="8" height="24" rx="2"/>'
+  +body({front:true,head:[100,30],sh:[100,45],hip:[100,80],legs:[[[74,88],[76,118]],[[126,88],[124,118]]],arms:[[[84,62],[72,80]],[[116,62],[128,80]]]})
+  +arrow("M50 64 L28 64",id)+arrow("M150 64 L172 64",id);
+DRAW.add=id=>G+'<rect class="eq" x="66" y="82" width="68" height="9" rx="2"/><rect class="eq" x="78" y="74" width="8" height="24" rx="2"/><rect class="eq" x="114" y="74" width="8" height="24" rx="2"/>'
+  +body({front:true,head:[100,30],sh:[100,45],hip:[100,80],legs:[[[68,88],[70,118]],[[132,88],[130,118]]],arms:[[[84,62],[72,80]],[[116,62],[128,80]]]})
+  +arrow("M40 64 L60 64",id)+arrow("M160 64 L140 64",id);
+DRAW.pallof=id=>G+'<rect class="eq" x="16" y="20" width="16" height="101" rx="2"/><line class="ar" style="stroke:var(--glacier)" x1="32" y1="62" x2="110" y2="62"/>'
+  +body({front:true,head:[110,26],sh:[110,41],hip:[110,78],legs:[[[100,99],[96,120]],[[120,99],[124,120]]],arms:[[[98,56],[110,62]],[[122,56],[110,62]]]})
+  +'<circle class="eq" cx="110" cy="62" r="4"/><text class="lbl" x="132" y="44">buste</text><text class="lbl" x="132" y="58">immobile</text>';
 /* ---------- Bibliothèque d'exercices ---------- */
 const EX={
   velo:{name:"Échauffement vélo",machine:"Vélo droit (zone cardio)",
@@ -317,6 +350,46 @@ const EX={
     set:"Vitesse lente à modérée, environ 50 à 70 marches par minute : tu dois pouvoir parler.",
     steps:["Pose tout le pied sur chaque marche et pousse avec le talon, comme en montée en peaux.","Garde un rythme régulier sans t’arrêter, et ajuste la vitesse pour rester en zone 2."],
     warn:"Ne te suspends pas aux rampes : mains posées légèrement, buste droit."},
+  legext:{name:"Leg extension",machine:"Machine leg extension (zone musculation)",
+    set:"Dossier réglé pour que l'axe de la machine soit en face du genou. Boudin sur le bas du tibia, juste au-dessus de la cheville.",
+    steps:["Tends les jambes en 2 s jusqu'à presque l'extension, en serrant les quadriceps en haut.","Redescends lentement en 3 s, sans laisser la charge retomber."],
+    warn:"Les fesses restent collées au siège. Pas d'à-coups : c'est le genou qui travaille."},
+  legcurl:{name:"Leg curl assis",machine:"Machine leg curl assise ou couchée (zone musculation)",
+    set:"Axe de la machine en face du genou. Boudin derrière la cheville, coussin de cuisse bien serré au-dessus des genoux.",
+    steps:["Plie les genoux en tirant les talons vers le dessous du siège.","Remonte lentement en 3 s jusqu'aux jambes presque tendues."],
+    warn:"Les ischios protègent le genou en descente : ne néglige pas cet exercice."},
+  fentesSmith:{name:"Fentes à la Smith machine",machine:"Smith machine (sinon haltères)",
+    set:"Barre sur le haut du dos, sous la barre. Un grand pas : pied avant devant, pied arrière sur la pointe. Déverrouille la barre en tournant les poignets.",
+    steps:["Descends verticalement jusqu'à ce que le genou arrière frôle le sol.","Remonte en poussant dans le talon avant. Toutes les reps, puis change de jambe."],
+    warn:"Garde le buste droit et le genou avant au-dessus de la cheville. Reverrouille la barre à la fin de chaque série."},
+  squatSmith:{name:"Squat à la Smith machine",machine:"Smith machine (sinon squat goblet)",
+    set:"Barre sur le haut du dos. Pieds largeur d'épaules, légèrement en avant de la barre.",
+    steps:["Descends en poussant les fesses en arrière jusqu'aux cuisses parallèles au sol.","Remonte en poussant dans les talons, buste fier."],
+    warn:"Dos droit, genoux dans l'axe des pieds. Règle les butées de sécurité juste sous la position basse."},
+  hipthrustSmith:{name:"Hip thrust à la Smith machine",machine:"Smith machine + banc (sinon haltère sur le bassin)",
+    set:"Haut du dos contre le banc, barre sur le pli de la hanche avec une mousse ou un tapis plié pour le confort.",
+    steps:["Pousse dans les talons et monte le bassin jusqu'à l'alignement épaules-hanches-genoux.","Serre les fessiers 1 s en haut, puis redescends lentement."],
+    warn:"Menton rentré, ne cambre pas le bas du dos en haut."},
+  mollpresse:{name:"Mollets à la presse",machine:"Presse à cuisses (la même que pour l'exercice 2)",
+    set:"Jambes tendues mais genoux non verrouillés. Seule la pointe des pieds sur le bas de la plateforme.",
+    steps:["Laisse la plateforme descendre vers toi en fléchissant les chevilles.","Pousse avec la pointe des pieds le plus loin possible, tiens 1 s."],
+    warn:"Ne relâche jamais les sécurités pendant l'exercice et ne plie pas les genoux."},
+  lombaires:{name:"Extension lombaire",machine:"Banc à lombaires à 45° (zone fonctionnelle)",
+    set:"Pieds calés, bord du coussin sous le pli de la hanche. Bras croisés sur la poitrine.",
+    steps:["Descends le buste lentement en gardant le dos plat.","Remonte jusqu'à l'alignement jambes-buste, sans dépasser."],
+    warn:"Ne te cambre pas en haut. C'est ce muscle qui porte le sac en montée."},
+  abd:{name:"Abducteurs",machine:"Machine abducteurs (zone musculation)",
+    set:"Assis, dos collé au dossier, coussins à l'extérieur des genoux.",
+    steps:["Écarte les genoux en 1 s, tiens 1 s en position ouverte.","Ramène lentement en 3 s sans laisser les plaques se toucher."],
+    warn:"Stabilise le bassin et les genoux en neige variable. Mouvement lent, sans élan."},
+  add:{name:"Adducteurs",machine:"Machine adducteurs (souvent la même machine, coussins à l'intérieur)",
+    set:"Assis, dos collé, coussins à l'intérieur des genoux. Ouverture de départ confortable, sans étirement forcé.",
+    steps:["Serre les genoux en 1 s, tiens 1 s.","Rouvre lentement en 3 s."],
+    warn:"Commence avec une petite ouverture : les adducteurs se froissent facilement."},
+  pallof:{name:"Pallof press au câble",machine:"Poulie vis-à-vis (station câbles)",
+    set:"Poignée réglée à hauteur de poitrine. Debout de profil par rapport à la poulie, à un grand pas, pieds largeur d'épaules.",
+    steps:["Poignée contre le sternum, tends les bras devant toi en 2 s.","Tiens bras tendus 2 s sans laisser le buste tourner vers la poulie, puis ramène. Toutes les reps, puis change de côté."],
+    warn:"C'est le gainage anti-rotation qui te garde stable sur les skis. Bassin et épaules restent face à l'avant."},
   goblet:{name:"Squat goblet",machine:"Kettlebell ou haltère tenu contre la poitrine",
     set:"Pieds un peu plus larges que les hanches, pointes légèrement ouvertes. Charge serrée contre le sternum.",
     steps:["Descends en poussant les genoux vers l'extérieur, jusqu'aux cuisses parallèles au sol.","Remonte en poussant dans les talons, buste fier."],
@@ -348,8 +421,8 @@ const EX={
 };
 
 // Charges conseillées par niveau : [base, construction, pic, allègement, test]
-const TARGET={presse:[60,70,80,50,80],fentes:[8,10,12,6,12],stepup:[6,8,10,4,10],sdtr:[12,14,16,10,16],mollets:[10,12,14,8,14],goblet:[16,18,20,12,20],bulgare:[6,8,10,4,10],hipthrust:[20,24,28,16,28]};
-const UNIT={presse:"kg",fentes:"kg par haltère",stepup:"kg par haltère",sdtr:"kg par haltère",mollets:"kg",goblet:"kg",bulgare:"kg par haltère",hipthrust:"kg"};
+const TARGET={legext:[25,30,35,20,35],legcurl:[20,25,30,15,30],fentesSmith:[10,15,20,5,20],squatSmith:[20,30,40,10,40],hipthrustSmith:[20,30,40,10,40],mollpresse:[60,70,80,50,80],abd:[30,35,40,25,40],add:[25,30,35,20,35],pallof:[7.5,10,12.5,5,12.5],presse:[60,70,80,50,80],fentes:[8,10,12,6,12],stepup:[6,8,10,4,10],sdtr:[12,14,16,10,16],mollets:[10,12,14,8,14],goblet:[16,18,20,12,20],bulgare:[6,8,10,4,10],hipthrust:[20,24,28,16,28]};
+const UNIT={legext:"kg",legcurl:"kg",fentesSmith:"kg ajoutés sur la barre",squatSmith:"kg ajoutés sur la barre",hipthrustSmith:"kg ajoutés sur la barre",mollpresse:"kg",abd:"kg",add:"kg",pallof:"kg",presse:"kg",fentes:"kg par haltère",stepup:"kg par haltère",sdtr:"kg par haltère",mollets:"kg",goblet:"kg",bulgare:"kg par haltère",hipthrust:"kg"};
 /* ---------- Programme ---------- */
 const START=new Date(2026,9,13), END=new Date(2026,11,31), WEEK0=new Date(2026,9,12);
 const MONTHS=[[2026,9],[2026,10],[2026,11]];
@@ -367,7 +440,7 @@ function phaseText(dt){
 }
 const P=(w,a)=>a[w];
 
-function seanceA(w,alt){ // mardi
+function seanceA_v1(w,alt){ // mardi, avant le 21 octobre
   return {kind:"gym",title:"Force jambes + endurance",short:"Force",badge:P(w,["60 min","65 min","70 min","45 min","65 min"]),
     goal:"Quadriceps, fessiers et ischios pour la montée et les descentes, puis du volume aérobie sur tapis.",
     ex:[
@@ -381,7 +454,7 @@ function seanceA(w,alt){ // mardi
       [alt?"stairz2":"tapis",P(w,["20 min","25 min","30 min","15 min","25 min"])]
     ]};
 }
-function seanceB(w){ // jeudi
+function seanceB_v1(w){ // jeudi, avant le 21 octobre
   return {kind:"gym",title:"Stabilité + intervalles",short:"Stab.",badge:P(w,["60 min","65 min","70 min","45 min","65 min"]),
     goal:"Genoux et chevilles solides pour la neige variable, puis des intervalles pour les passages raides.",
     ex:[
@@ -392,6 +465,35 @@ function seanceB(w){ // jeudi
       ["equilibre",P(w,["3 × 30 s par jambe","3 × 40 s par jambe","3 × 45 s par jambe","2 × 30 s par jambe","3 × 45 s par jambe"])],
       ["lateral",P(w,["3 × 30 s par côté","3 × 35 s par côté","3 × 45 s par côté","2 × 30 s par côté","3 × 45 s par côté"])],
       ["deadbug","3 × 10"],
+      ["stair",P(w,["5 × 3 min, récup 2 min","6 × 3 min, récup 2 min","5 × 4 min, récup 2 min","4 × 3 min à 7/10, récup 2 min","5 × 4 min, récup 2 min"])]
+    ]};
+}
+const NEW_FROM="2026-10-21";
+function seanceA(w,alt){ // mardi, version machines
+  return {kind:"gym",title:"Force jambes + endurance",short:"Force",badge:P(w,["60 min","65 min","70 min","45 min","65 min"]),
+    goal:"Quadriceps, ischios et mollets aux machines pour la montée et les descentes, puis du volume aérobie.",
+    ex:[
+      ["velo","8 min progressif"],
+      ["presse",P(w,["3 × 12","4 × 10","4 × 8, plus lourd","3 × 10, léger","4 × 8"])],
+      ["legext",P(w,["3 × 12","3 × 15","4 × 12","2 × 12","3 × 15"])],
+      ["legcurl",P(w,["3 × 12","3 × 15","4 × 12","2 × 12","3 × 15"])],
+      ["fentesSmith",P(w,["3 × 10 par jambe","3 × 12 par jambe","4 × 10 par jambe","2 × 10 par jambe","3 × 12 par jambe"])],
+      ["mollpresse",P(w,["3 × 15","3 × 20","4 × 20","2 × 15","3 × 20"])],
+      ["lombaires",P(w,["3 × 12","3 × 15","3 × 15","2 × 12","3 × 15"])],
+      [alt?"stairz2":"tapis",P(w,["20 min","25 min","30 min","15 min","25 min"])]
+    ]};
+}
+function seanceB(w){ // jeudi, version machines
+  return {kind:"gym",title:"Stabilité + intervalles",short:"Stab.",badge:P(w,["60 min","65 min","70 min","45 min","65 min"]),
+    goal:"Hanches, genoux et tronc solides pour la neige variable, puis des intervalles pour les passages raides.",
+    ex:[
+      ["rameur","8 min facile"],
+      ["squatSmith",P(w,["3 × 12","4 × 10","4 × 8","3 × 10, léger","4 × 8"])],
+      ["abd",P(w,["3 × 15","3 × 15","4 × 15","2 × 15","3 × 15"])],
+      ["add",P(w,["3 × 15","3 × 15","4 × 15","2 × 15","3 × 15"])],
+      ["hipthrustSmith",P(w,["3 × 12","3 × 12","4 × 10","2 × 12","3 × 12"])],
+      ["pallof",P(w,["3 × 10 par côté","3 × 12 par côté","3 × 12 par côté, tiens 2 s","2 × 10 par côté","3 × 12 par côté"])],
+      ["equilibre",P(w,["3 × 30 s par jambe","3 × 40 s par jambe","3 × 45 s par jambe","2 × 30 s par jambe","3 × 45 s par jambe"])],
       ["stair",P(w,["5 × 3 min, récup 2 min","6 × 3 min, récup 2 min","5 × 4 min, récup 2 min","4 × 3 min à 7/10, récup 2 min","5 × 4 min, récup 2 min"])]
     ]};
 }
@@ -408,7 +510,8 @@ function sess(k){
   let s=OFF;
   if(dt>=START&&dt<=END){
     const w=levelOf(dt), dow=dt.getDay();
-    if(dow===2) s=seanceA(w,weekIdx(dt)%2); else if(dow===4) s=seanceB(w); else if(dow===0) s=sortie(w);
+    const old=k<NEW_FROM;
+    if(dow===2) s=(old?seanceA_v1:seanceA)(w,weekIdx(dt)%2); else if(dow===4) s=(old?seanceB_v1:seanceB)(w); else if(dow===0) s=sortie(w);
     if((k==="2026-12-24"||k==="2026-12-31")&&s.kind==="gym") s={...s,goal:s.goal+" Vérifie les horaires du club ce jour-là."};
   }
   return SESS[k]=s;
