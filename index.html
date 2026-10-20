@@ -117,6 +117,14 @@ details.how summary:focus-visible{outline:2px solid var(--glacier);outline-offse
 .fig .tip{fill:var(--signal)}
 .fig .lbl{fill:var(--signal);font:600 13px "Barlow",sans-serif}
 
+.load{margin:8px 0 0 40px;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.load label{display:flex;align-items:center;gap:8px;font-size:.92rem;font-weight:600}
+.load input{width:84px;font:inherit;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.load input:focus-visible{outline:2.5px solid var(--glacier);outline-offset:1px}
+.load .unit{font-weight:400;color:var(--muted)}
+.load .target{flex-basis:100%;font-size:.95rem}
+.load .target b{color:var(--spruce)}
+.load .last{color:var(--muted);font-size:.85rem}
 .rest-msg{padding:6px 0 14px;color:var(--muted)}
 .actions{display:flex;gap:10px;padding:12px 0 10px}
 button.btn{appearance:none;font:inherit;font-weight:600;border-radius:10px;padding:10px 14px;cursor:pointer;
@@ -159,9 +167,11 @@ button.btn:focus-visible{outline:2.5px solid var(--glacier);outline-offset:2px}
 
   <div class="notes">
     <h3>Repères</h3>
-    <p><b>Mardi</b> : force jambes + endurance sur tapis. <b>Jeudi</b> : stabilité + intervalles au StairMaster. Le dimanche, une sortie dehors facultative.</p>
+    <p><b>Mardi</b> : force jambes + endurance, en alternance sur tapis incliné et sur escalier mécanique. <b>Jeudi</b> : stabilité + intervalles au StairMaster. Le dimanche, une sortie dehors facultative.</p>
     <p><b>Zone 2</b> : tu peux parler en phrases complètes. C'est l'allure de la montée en peaux.</p>
     <p><b>Charges</b> : garde 2 répétitions en réserve sur chaque série. Monte la charge quand la dernière série devient facile.</p>
+    <p><b>Charges conseillées</b> : ce sont des points de départ pour un adulte actif qui reprend la musculation. Si tu fais toutes les répétitions avec plus de 2 en réserve, prends la charge au-dessus ; si la dernière série est un combat, descends d’un cran.</p>
+    <p><b>Charges notées</b> : sous chaque exercice de musculation, note le poids utilisé. La séance suivante affiche ta charge de la dernière fois pour savoir quoi prendre.</p>
     <p><b>Repos entre séries</b> : 60 à 90 s pour la force, 30 s pour le gainage.</p>
     <p>Si une douleur articulaire apparaît, allège la charge ou saute l'exercice.</p>
   </div>
@@ -260,6 +270,7 @@ const DRAW={
     +arrow("M150 50 L178 40",id)
 };
 
+DRAW.stairz2=DRAW.stair;
 /* ---------- Bibliothèque d'exercices ---------- */
 const EX={
   velo:{name:"Échauffement vélo",machine:"Vélo droit (zone cardio)",
@@ -298,10 +309,14 @@ const EX={
     set:"Inclinaison 12 à 15 %, vitesse 5 à 5,5 km/h.",
     steps:["Marche à grands pas réguliers, en poussant sur toute la plante du pied.","Garde une respiration qui te permet de parler."],
     warn:"Ne tiens pas les barres : ça annule l'effet de la pente."},
-  stair:{name:"Intervalles StairMaster",machine:"StairMaster / escalier mécanique (zone cardio)",
+  stair:{name:"Intervalles à l’escalier mécanique",machine:"StairMaster / escalier mécanique (zone cardio)",
     set:"Après 5 min de montée facile. Si le StairMaster est pris : tapis à 15 % et 6 km/h.",
     steps:["Monte à effort 8/10 pendant la durée indiquée : dur mais tenable jusqu'au bout.","Récupère 2 min à allure lente, puis enchaîne la répétition suivante."],
     warn:"Buste droit, mains posées légèrement sur les rampes sans t'y suspendre."},
+  stairz2:{name:"Escalier mécanique, zone 2",machine:"Escalier mécanique / StairMaster (zone cardio)",
+    set:"Vitesse lente à modérée, environ 50 à 70 marches par minute : tu dois pouvoir parler.",
+    steps:["Pose tout le pied sur chaque marche et pousse avec le talon, comme en montée en peaux.","Garde un rythme régulier sans t’arrêter, et ajuste la vitesse pour rester en zone 2."],
+    warn:"Ne te suspends pas aux rampes : mains posées légèrement, buste droit."},
   goblet:{name:"Squat goblet",machine:"Kettlebell ou haltère tenu contre la poitrine",
     set:"Pieds un peu plus larges que les hanches, pointes légèrement ouvertes. Charge serrée contre le sternum.",
     steps:["Descends en poussant les genoux vers l'extérieur, jusqu'aux cuisses parallèles au sol.","Remonte en poussant dans les talons, buste fier."],
@@ -332,6 +347,9 @@ const EX={
     warn:"Vérifie le bulletin d'avalanche avant toute sortie sur neige."}
 };
 
+// Charges conseillées par niveau : [base, construction, pic, allègement, test]
+const TARGET={presse:[60,70,80,50,80],fentes:[8,10,12,6,12],stepup:[6,8,10,4,10],sdtr:[12,14,16,10,16],mollets:[10,12,14,8,14],goblet:[16,18,20,12,20],bulgare:[6,8,10,4,10],hipthrust:[20,24,28,16,28]};
+const UNIT={presse:"kg",fentes:"kg par haltère",stepup:"kg par haltère",sdtr:"kg par haltère",mollets:"kg",goblet:"kg",bulgare:"kg par haltère",hipthrust:"kg"};
 /* ---------- Programme ---------- */
 const START=new Date(2026,9,13), END=new Date(2026,11,31), WEEK0=new Date(2026,9,12);
 const MONTHS=[[2026,9],[2026,10],[2026,11]];
@@ -349,7 +367,7 @@ function phaseText(dt){
 }
 const P=(w,a)=>a[w];
 
-function seanceA(w){ // mardi
+function seanceA(w,alt){ // mardi
   return {kind:"gym",title:"Force jambes + endurance",short:"Force",badge:P(w,["60 min","65 min","70 min","45 min","65 min"]),
     goal:"Quadriceps, fessiers et ischios pour la montée et les descentes, puis du volume aérobie sur tapis.",
     ex:[
@@ -360,7 +378,7 @@ function seanceA(w){ // mardi
       ["sdtr",P(w,["3 × 12","3 × 12","4 × 10","2 × 12","3 × 12"])],
       ["mollets",P(w,["3 × 15","3 × 20","4 × 20","2 × 15","3 × 20"])],
       ["planche",P(w,["3 × 40 s","3 × 50 s","3 × 60 s","2 × 40 s","3 × 60 s"])],
-      ["tapis",P(w,["20 min","25 min","30 min","15 min","25 min"])]
+      [alt?"stairz2":"tapis",P(w,["20 min","25 min","30 min","15 min","25 min"])]
     ]};
 }
 function seanceB(w){ // jeudi
@@ -390,7 +408,7 @@ function sess(k){
   let s=OFF;
   if(dt>=START&&dt<=END){
     const w=levelOf(dt), dow=dt.getDay();
-    if(dow===2) s=seanceA(w); else if(dow===4) s=seanceB(w); else if(dow===0) s=sortie(w);
+    if(dow===2) s=seanceA(w,weekIdx(dt)%2); else if(dow===4) s=seanceB(w); else if(dow===0) s=sortie(w);
     if((k==="2026-12-24"||k==="2026-12-31")&&s.kind==="gym") s={...s,goal:s.goal+" Vérifie les horaires du club ce jour-là."};
   }
   return SESS[k]=s;
@@ -409,8 +427,15 @@ function sheet(k){
 
 /* ---------- État ---------- */
 const LS_KEY="prepa-rando-2026-v3";
-let state={checks:{}};
-try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&p.checks) state=p; } }catch(e){}
+let state={checks:{},weights:{}};
+try{ const raw=localStorage.getItem(LS_KEY); if(raw){ const p=JSON.parse(raw); if(p&&p.checks) state={checks:p.checks,weights:p.weights||{}}; } }catch(e){}
+const getW=(k,i)=>(state.weights[k]&&state.weights[k][i])||"";
+function lastW(k,id){
+  const ks=Object.keys(state.weights).filter(x=>x<k).sort().reverse();
+  for(const x of ks){ const s=sess(x); if(s.kind==="off") continue; const i=s.ex.findIndex(e=>e[0]===id); if(i>=0&&state.weights[x][i]) return [x,state.weights[x][i]]; }
+  return null;
+}
+const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const isChecked=(k,i)=>!!(state.checks[k]&&state.checks[k][i]);
 function dayStatus(k){
   const s=sess(k); if(s.kind==="off") return "off";
@@ -460,12 +485,14 @@ function renderPanel(){
       const x=EX[e[0]], c=isChecked(k,i), sk=k+"-"+i;
       h+='<li class="'+(c?"checked":"")+'"><label class="row"><input type="checkbox" data-i="'+i+'"'+(c?" checked":"")+' aria-label="'+x.name+' fait">'
         +'<span><span class="ex-name"><span class="idx">'+(i+1)+'.</span>'+x.name+'</span><span class="ex-dose">'+e[1]+'</span><span class="ex-machine">'+x.machine+'</span></span></label>'
+        +(UNIT[e[0]]?loadField(k,i,e[0],x.name):"")
         +'<details class="how" data-k="'+sk+'" data-ex="'+e[0]+'"'+(openSheets.has(sk)?" open":"")+'><summary>Comment faire</summary><div class="sheet">'+(openSheets.has(sk)?sheet(e[0]):"")+'</div></details></li>';
     });
     h+='</ul><div class="actions"><button class="btn primary" type="button" id="all">Tout cocher</button><button class="btn" type="button" id="none">Décocher</button></div>';
   }
   p.innerHTML=h;
   p.querySelectorAll(".row input").forEach(inp=>inp.addEventListener("change",()=>setCheck(k,+inp.dataset.i,inp.checked)));
+  p.querySelectorAll("input.kg").forEach(inp=>inp.addEventListener("input",()=>setWeight(k,+inp.dataset.i,inp.value)));
   p.querySelectorAll("details.how").forEach(dt=>dt.addEventListener("toggle",()=>{
     const sk=dt.dataset.k;
     if(dt.open){ openSheets.add(sk); const sh=dt.querySelector(".sheet"); if(!sh.innerHTML) sh.innerHTML=sheet(dt.dataset.ex); }
@@ -474,6 +501,11 @@ function renderPanel(){
   const all=document.getElementById("all"), none=document.getElementById("none");
   if(all) all.addEventListener("click",()=>{ s.ex.forEach((_,i)=>setCheck(k,i,true,true)); commit(); });
   if(none) none.addEventListener("click",()=>{ s.ex.forEach((_,i)=>setCheck(k,i,false,true)); commit(); });
+}
+function loadField(k,i,id,name){
+  const lw=lastW(k,id), d=lw?fromKey(lw[0]):null, t=TARGET[id][levelOf(fromKey(k))];
+  return '<div class="load"><span class="target">Charge conseillée : <b>'+t+' '+UNIT[id]+'</b></span><label>Utilisée <input class="kg" type="text" inputmode="decimal" autocomplete="off" data-i="'+i+'" value="'+esc(getW(k,i))+'" placeholder="'+t+'" aria-label="Charge utilisée pour '+name+', '+UNIT[id]+'"><span class="unit">'+UNIT[id]+'</span></label>'
+    +(lw?'<span class="last">Dernière fois : '+esc(lw[1])+(/^[\d.,\s]+$/.test(lw[1])?" kg":"")+' ('+fmt(d)+')</span>':'')+'</div>';
 }
 function nextLabel(k){
   const nx=ALL_GYM.find(g=>g>k); if(!nx) return "la saison commence !";
@@ -498,20 +530,27 @@ function setCheck(k,i,val,batch){
 }
 let dbDoc=null, saveTimer=null;
 const syncEl=document.getElementById("sync");
-function commit(){
+function setWeight(k,i,v){
+  v=v.trim().slice(0,12);
+  if(!state.weights[k]) state.weights[k]={};
+  if(v) state.weights[k][i]=v; else delete state.weights[k][i];
+  if(!Object.keys(state.weights[k]).length) delete state.weights[k];
+  save();
+}
+function commit(){ const y=window.scrollY; render(); window.scrollTo(0,y); save(); }
+function save(){
   try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){}
-  const y=window.scrollY; render(); window.scrollTo(0,y);
   if(dbDoc){
     clearTimeout(saveTimer);
     saveTimer=setTimeout(()=>{
-      dbDoc.set({checks:state.checks, updated:Date.now()})
+      dbDoc.set({checks:state.checks, weights:state.weights, updated:Date.now()})
         .then(()=>{ syncEl.textContent="Synchronisé avec ton compte"; })
         .catch(()=>{ syncEl.textContent="Sauvegarde sur cet appareil"; });
     },600);
   }
 }
 document.getElementById("reset").addEventListener("click",()=>{
-  if(confirm("Décocher toutes les séances ?")){ state={checks:{}}; commit(); }
+  if(confirm("Décocher toutes les séances ? Les charges notées sont conservées.")){ state.checks={}; commit(); }
 });
 render();
 
@@ -526,9 +565,9 @@ render();
     const snap=await dbDoc.get();
     if(snap.exists){
       const data=snap.data();
-      if(data&&data.checks){ state={checks:data.checks}; try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){} render(); }
-    }else if(Object.keys(state.checks).length){
-      await dbDoc.set({checks:state.checks, updated:Date.now()});
+      if(data&&data.checks){ state={checks:data.checks,weights:data.weights||{}}; try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){} render(); }
+    }else if(Object.keys(state.checks).length||Object.keys(state.weights).length){
+      await dbDoc.set({checks:state.checks, weights:state.weights, updated:Date.now()});
     }
     syncEl.textContent="Synchronisé avec ton compte";
   }catch(e){}
